@@ -45,7 +45,6 @@
       pointer-events: none;
     }
 
-    /* Screen Layer System */
     .screen { display: none; width: 100%; height: 100%; position: relative; flex-direction: column; }
     .screen.active { display: flex; }
     .retro-text { font-family: 'Press Start 2P', cursive; }
@@ -100,7 +99,7 @@
       flex-direction: column;
       align-items: center;
       width: 100%;
-      gap: 20px;
+      gap: 30px;
     }
 
     .friends-pic {
@@ -110,14 +109,7 @@
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
     }
 
-    .auth-form { 
-      text-align: center; 
-      background: rgba(0,0,0,0.85); 
-      padding: 30px; 
-      border-radius: 15px; 
-      border: 1px solid #333;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    }
+    .auth-form { text-align: center; background: rgba(0,0,0,0.7); padding: 30px; border-radius: 15px; border: 1px solid #333; }
     .auth-form input {
       display: block;
       margin: 10px auto;
@@ -138,11 +130,10 @@
     #menu-screen { align-items: center; justify-content: center; text-align: center; }
     .menu-options h2 { margin: 25px 0; font-size: 18px; color: var(--neon-blue); cursor: pointer; transition: 0.3s; }
     .menu-options h2:hover { color: #fff; text-shadow: 0 0 15px var(--neon-blue); }
-    .sys-message { margin: 40px auto 0; max-width: 500px; height: 80px; font-size: 12px; line-height: 1.8; color: var(--neon-red); }
+    .sys-message { margin: 40px auto 0; max-width: 600px; height: 100px; font-size: 12px; line-height: 1.8; color: var(--neon-red); }
 
     /* ---------- SCREEN 3: DASHBOARD ---------- */
-    /* YAHAN SE DISPLAY FLEX HATA DIYA GAYA HAI. ONLY PADDING AND MARGIN LEFT. */
-    #dashboard-screen { padding: 20px; max-width: 1200px; margin: 0 auto; flex-direction: column; }
+    #dashboard-screen { padding: 20px; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
 
     .top-reminders { display: flex; justify-content: center; flex-wrap: wrap; gap: 40px; margin-bottom: 20px; z-index: 10; }
     .neon-icon {
@@ -287,8 +278,8 @@
     <div class="retro-text neon-sign-board" id="neon-hint">KEEP IT SIMPLE SILLY</div>
 
     <div class="login-scene">
-      <!-- ONLY FRIENDS PIC -->
-      <img src="https://drive.google.com/uc?export=view&id=1Ul8EjJgL96UMJuDm1XtdzjXyCmwNJKQh" class="friends-pic" alt="Friends">
+      <!-- Fixed local assets path -->
+      <img src="assets/friends.jpg" class="friends-pic" alt="Friends">
 
       <div class="auth-form">
         <input type="text" placeholder="USERNAME" id="username">
@@ -340,9 +331,9 @@
     </div>
 
     <div class="jukebox-area">
-      <!-- JIGGLYPUFF DJ -->
+      <!-- Fixed local assets path -->
       <div class="jiggly-dj" onclick="toggleDJ()">
-        <img src="https://drive.google.com/uc?export=view&id=191hGEyOAuKjT85WnhIvmq4HMED8Pd_jj" alt="Jigglypuff DJ">
+        <img src="assets/jigglypuff.gif" alt="Jigglypuff DJ">
       </div>
       <div class="dj-console">
         <div class="turntable"><div class="vinyl" id="vinyl"></div></div>
@@ -447,21 +438,24 @@
       if (e.key === 'Enter') attemptLogin();
     });
 
+    /* GIMMICK RESTORED EXACTLY */
     function selectMenu(choice) {
       const hasPlayed = localStorage.getItem('moss_started');
       const sysMsg = document.getElementById('sys-message');
 
       if (choice === 'new') {
         if (hasPlayed) {
-          sysMsg.innerHTML = "Excuse me?! 😭<br><br>You already have a perfectly good adventure going on. Choose Continue. ♡";
+          sysMsg.innerHTML = "Excuse me?! 😭<br><br>You already have a perfectly good adventure going on. Too late. You're stuck with this one now. ♡<br><br>Nice try, player. Choose Continue.";
         } else {
           localStorage.setItem('moss_started', 'true');
           launchDashboard();
         }
-      } else if (!hasPlayed) {
-        sysMsg.innerHTML = "Wait... Continue what? 😭<br><br>You haven't even started yet, player! Click New Game.";
-      } else {
-        launchDashboard();
+      } else if (choice === 'continue') {
+        if (!hasPlayed) {
+          sysMsg.innerHTML = "Wait... Continue what? 😭<br><br>You haven't even started yet, player!<br><br>Nice try. Let's start this little adventure first.";
+        } else {
+          launchDashboard();
+        }
       }
     }
 
@@ -609,10 +603,6 @@
     let errorStreak = 0;
 
     function onYouTubeIframeAPIReady() {
-      if (window.location.protocol === 'file:') {
-        console.warn("YouTube songs require a web server to play (Live Server or GitHub Pages).");
-      }
-
       const playerVars = { controls: 0, playsinline: 1, disablekb: 1 };
       if (window.location.protocol.startsWith('http')) {
         playerVars.origin = window.location.origin;
@@ -629,13 +619,12 @@
             if (e.data === YT.PlayerState.PAUSED) setDJState(false);
             if (e.data === YT.PlayerState.ENDED) playRandom();
           },
+          /* FIXED YT ERROR LOGIC */
           onError: e => {
             console.log('YT ERROR:', e.data);
             errorStreak++;
-            if (e.data === 153 || errorStreak >= 5) {
-              setStatus(`USE LIVE SERVER`, 'var(--neon-red)');
-              return;
-            }
+            setStatus(`ERR ${e.data}`, 'var(--neon-red)');
+            if (e.data === 153 || errorStreak >= VIDEO_IDS.length) return;
             playRandom();
           }
         }

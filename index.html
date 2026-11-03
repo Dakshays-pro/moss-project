@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOSS.exe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0c;
+      --neon-pink: #ffaddd;
+      --neon-pink-glow: #ff91d2;
+      --neon-blue: #00e5ff;
+      --neon-green: #39ff14;
+      --neon-red: #ff3366;
+      --neon-purple: #bd9bff;
+      --aurora-1: #00ffcc;
+      --aurora-2: #cc00ff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: white;
+      font-family: 'Space Mono', monospace;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .crt::before {
+      content: " ";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      background-size: 100% 2px, 3px 100%;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    /* Screen Layer System */
+    .screen { display: none; width: 100%; height: 100%; position: relative; flex-direction: column; }
+    .screen.active { display: flex; }
+    .retro-text { font-family: 'Press Start 2P', cursive; }
+
+    button {
+      background: transparent;
+      border: 2px solid var(--neon-pink);
+      color: var(--neon-pink);
+      padding: 15px 20px;
+      margin-top: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 10px;
+    }
+    button:hover { background: var(--neon-pink); color: var(--bg-dark); box-shadow: 0 0 15px var(--neon-pink-glow); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes blink { 50% { opacity: 0.4; } }
+
+    /* ---------- SCREEN 1: LOGIN ---------- */
+    #login-screen {
+      background: radial-gradient(circle at center, #1a1525 0%, var(--bg-dark) 100%);
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .neon-sign-board {
+      position: relative;
+      margin-bottom: 40px;
+      border: 3px solid #333;
+      border-radius: 10px;
+      padding: 15px 30px;
+      background: #050505;
+      color: #222;
+      font-size: 14px;
+      text-align: center;
+      box-shadow: inset 0 0 10px #000;
+      transition: all 0.4s ease;
+    }
+    .neon-sign-board.glow {
+      border-color: var(--neon-red);
+      color: var(--neon-red);
+      box-shadow: 0 0 15px var(--neon-red), inset 0 0 15px var(--neon-red);
+      text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-red), 0 0 20px var(--neon-red);
+    }
+
+    .login-scene {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      gap: 20px;
+    }
+
+    .friends-pic {
+      width: min(460px, 90%);
+      border-radius: 8px;
+      border: 2px solid #444;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    }
+
+    .auth-form { 
+      text-align: center; 
+      background: rgba(0,0,0,0.85); 
+      padding: 30px; 
+      border-radius: 15px; 
+      border: 1px solid #333;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+    .auth-form input {
+      display: block;
+      margin: 10px auto;
+      width: 250px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--neon-pink);
+      color: var(--neon-blue);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 1px;
+      text-align: center;
+      outline: none;
+    }
+    .start-btn { animation: blink 1.2s steps(2) infinite; }
+    .start-btn:hover { animation: none; }
+
+    /* ---------- SCREEN 2: MENU ---------- */
+    #menu-screen { align-items: center; justify-content: center; text-align: center; }
+    .menu-options h2 { margin: 25px 0; font-size: 18px; color: var(--neon-blue); cursor: pointer; transition: 0.3s; }
+    .menu-options h2:hover { color: #fff; text-shadow: 0 0 15px var(--neon-blue); }
+    .sys-message { margin: 40px auto 0; max-width: 500px; height: 80px; font-size: 12px; line-height: 1.8; color: var(--neon-red); }
+
+    /* ---------- SCREEN 3: DASHBOARD ---------- */
+    /* YAHAN SE DISPLAY FLEX HATA DIYA GAYA HAI. ONLY PADDING AND MARGIN LEFT. */
+    #dashboard-screen { padding: 20px; max-width: 1200px; margin: 0 auto; flex-direction: column; }
+
+    .top-reminders { display: flex; justify-content: center; flex-wrap: wrap; gap: 40px; margin-bottom: 20px; z-index: 10; }
+    .neon-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 20px;
+      background: #050505;
+      border: 2px solid #222;
+      border-radius: 12px;
+      color: #222;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .neon-icon span { font-size: 10px; color: #555; }
+    .pix { width: 36px; height: 42px; fill: currentColor; shape-rendering: crispEdges; }
+
+    .neon-icon.fire.lit { color: #ff5500; border-color: #ff5500; box-shadow: inset 0 0 10px #ff5500; }
+    .neon-icon.fire.lit .pix { filter: drop-shadow(0 0 4px #ff5500) drop-shadow(0 0 12px #ff0000); }
+    .neon-icon.fire.lit span { color: #ff5500; }
+
+    .neon-icon.water.lit { color: #00e5ff; border-color: #00e5ff; box-shadow: inset 0 0 10px #00e5ff; }
+    .neon-icon.water.lit .pix { filter: drop-shadow(0 0 4px #00e5ff) drop-shadow(0 0 12px #0055ff); }
+    .neon-icon.water.lit span { color: #00e5ff; }
+
+    .neon-icon.queen.lit { color: #ff00ff; border-color: #ff00ff; box-shadow: inset 0 0 10px #ff00ff; }
+    .neon-icon.queen.lit .pix { filter: drop-shadow(0 0 4px #ff00ff) drop-shadow(0 0 12px #aa00ff); }
+    .neon-icon.queen.lit span { color: #ff00ff; }
+
+    .info-panel { text-align: center; margin-bottom: 20px; }
+    .quote-display { font-size: 12px; color: var(--neon-purple); font-style: italic; margin-bottom: 15px; line-height: 1.5; padding: 0 20px; }
+    .distance-display { font-size: 10px; color: var(--neon-blue); letter-spacing: 1px; }
+
+    .puzzle-wrapper {
+      flex: 1;
+      position: relative;
+      margin-bottom: 20px;
+      overflow: hidden;
+      border: 1px dashed #333;
+      border-radius: 15px;
+      background: radial-gradient(circle at center, #111 0%, #000 100%);
+      min-height: 250px;
+    }
+    #constellation-area { position: absolute; inset: 0; touch-action: none; }
+    svg#lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+
+    .aurora-line {
+      stroke: var(--aurora-1);
+      stroke-width: 4;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 8px var(--aurora-1)) drop-shadow(0 0 15px var(--aurora-2));
+      animation: auroraPulse 2s infinite alternate;
+    }
+    @keyframes auroraPulse { 0% { stroke: var(--aurora-1); } 100% { stroke: var(--aurora-2); } }
+
+    .star-node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .star-word { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255, 255, 255, 0.4); transition: 0.3s; pointer-events: none; text-align: center;}
+    .star-dot { width: 12px; height: 12px; border-radius: 50%; background: #444; box-shadow: 0 0 5px #000; transition: 0.3s; }
+    .star-node.active .star-dot { background: #fff; box-shadow: 0 0 15px #fff, 0 0 30px var(--neon-blue); }
+    .star-node.active .star-word { color: var(--neon-blue); font-weight: bold; text-shadow: 0 0 8px var(--neon-blue); }
+
+    .reset-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 20;
+      margin: 0;
+      padding: 8px 12px;
+      font-size: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid var(--neon-pink);
+    }
+
+    .jukebox-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      height: 120px;
+      padding: 10px;
+      background: #0a0a0c;
+      border: 1px solid #333;
+      border-radius: 10px;
+    }
+    .jiggly-dj { height: 100px; cursor: pointer; }
+    .jiggly-dj img { height: 100%; object-fit: contain; }
+
+    .dj-console { display: flex; align-items: center; gap: 20px; }
+    .turntable {
+      display: grid;
+      place-items: center;
+      width: 90px;
+      height: 90px;
+      background: #261c36;
+      border: 2px solid var(--neon-purple);
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(189, 155, 255, 0.2);
+    }
+    .vinyl { display: flex; align-items: center; justify-content: center; width: 70px; height: 70px; background: #111; border: 2px solid #ff91d2; border-radius: 50%; }
+    .vinyl::after { content: ''; width: 15px; height: 15px; background: #ff91d2; border-radius: 50%; }
+    .vinyl.playing { animation: spin 2s linear infinite; }
+
+    .equalizer { display: flex; align-items: flex-end; gap: 4px; height: 40px; }
+    .eq-bar { width: 8px; height: 5px; background: var(--neon-pink); border-radius: 2px; }
+    .equalizer.playing .eq-bar { animation: eqBounce 0.5s infinite alternate ease-in-out; }
+    .equalizer.playing .eq-bar:nth-child(2) { animation-delay: 0.1s; }
+    .equalizer.playing .eq-bar:nth-child(3) { animation-delay: 0.3s; }
+    .equalizer.playing .eq-bar:nth-child(4) { animation-delay: 0.2s; }
+    .equalizer.playing .eq-bar:nth-child(5) { animation-delay: 0.4s; }
+    @keyframes eqBounce { to { height: 35px; } }
+
+    .dj-controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .dj-btn { width: 150px; padding: 10px; margin: 0; font-size: 10px; }
+
+    #ytPlayer { position: fixed; bottom: 0; left: 0; width: 200px; height: 200px; opacity: 0.01; pointer-events: none; }
+
+    /* ---------- SCREEN 4: FINAL ---------- */
+    #final-screen {
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: radial-gradient(circle, #2a0815 0%, var(--bg-dark) 100%);
+      padding: 20px;
+    }
+    #final-message { max-width: 600px; font-size: 16px; line-height: 2; color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink-glow); white-space: pre-wrap; margin-bottom: 30px; }
+  </style>
+</head>
+<body class="crt">
+
+  <!-- SCREEN 1: LOGIN -->
+  <div id="login-screen" class="screen active">
+    <div class="retro-text neon-sign-board" id="neon-hint">KEEP IT SIMPLE SILLY</div>
+
+    <div class="login-scene">
+      <!-- ONLY FRIENDS PIC -->
+      <img src="https://drive.google.com/uc?export=view&id=1Ul8EjJgL96UMJuDm1XtdzjXyCmwNJKQh" class="friends-pic" alt="Friends">
+
+      <div class="auth-form">
+        <input type="text" placeholder="USERNAME" id="username">
+        <input type="password" placeholder="PASSWORD" id="password">
+        <button class="start-btn" onclick="attemptLogin()">[ PRESS TO START ]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: MENU -->
+  <div id="menu-screen" class="screen">
+    <div>
+      <div class="menu-options">
+        <h2 class="retro-text" onclick="selectMenu('new')">▶ NEW GAME</h2>
+        <h2 class="retro-text" onclick="selectMenu('continue')">  CONTINUE</h2>
+      </div>
+      <div class="retro-text sys-message" id="sys-message"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: DASHBOARD -->
+  <div id="dashboard-screen" class="screen">
+    <div class="top-reminders">
+      <div class="neon-icon fire" onclick="this.classList.toggle('lit')">
+        <svg class="pix" data-sprite="fire"></svg>
+        <span>Pokémon Go Streak</span>
+      </div>
+      <div class="neon-icon water" onclick="this.classList.toggle('lit')">
+        <svg class="pix" data-sprite="water"></svg>
+        <span>Hydration</span>
+      </div>
+      <div class="neon-icon queen" onclick="this.classList.toggle('lit')">
+        <svg class="pix" data-sprite="queen"></svg>
+        <span>Duolingo</span>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div id="quote-widget" class="quote-display retro-text"></div>
+      <div class="distance-display retro-text">
+        VARANASI ♡ RAIPUR <br><br> ~850 KM | SIGNAL: CONNECTED
+      </div>
+    </div>
+
+    <div class="puzzle-wrapper" id="puzzle-container">
+      <button class="retro-text reset-btn" onclick="initConstellation()">RESET PUZZLE</button>
+      <svg id="lines"></svg>
+      <div id="constellation-area"></div>
+    </div>
+
+    <div class="jukebox-area">
+      <!-- JIGGLYPUFF DJ -->
+      <div class="jiggly-dj" onclick="toggleDJ()">
+        <img src="https://drive.google.com/uc?export=view&id=191hGEyOAuKjT85WnhIvmq4HMED8Pd_jj" alt="Jigglypuff DJ">
+      </div>
+      <div class="dj-console">
+        <div class="turntable"><div class="vinyl" id="vinyl"></div></div>
+        <div class="equalizer" id="equalizer">
+          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        </div>
+        <div class="dj-controls">
+          <button class="dj-btn" id="dj-btn" onclick="toggleDJ()">[ PLAY RANDOM ]</button>
+          <div class="retro-text" id="dj-status" style="font-size: 8px; color: #666;">READY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: FINAL -->
+  <div id="final-screen" class="screen">
+    <div id="final-message" class="retro-text"></div>
+    <button class="retro-text start-btn" onclick="resetGame()">[ PLAY AGAIN ]</button>
+  </div>
+
+  <div id="ytPlayer"></div>
+
+  <script>
+    /* ---------- PIXEL SPRITES ---------- */
+    const SPRITES = {
+      fire: [
+        "......#.....", ".....##.....", ".....###..#.", "....####.##.", "...#####.##.",
+        "..########..", "..#########.", ".####..#####", ".###....####", ".###....####",
+        ".####..#####", "..#########.", "...#######..", "....#####..."
+      ],
+      water: [
+        ".....##.....", ".....##.....", "....####....", "....####....", "...######...",
+        "..########..", "..########..", ".##########.", ".##########.", ".###.######.",
+        ".###.######.", "..####.####.", "...######...", "....####...."
+      ],
+      queen: [
+        "#.....#.....#", "##...###...##", "###.#####.###", "#############",
+        "#############", "#############", ".###########."
+      ]
+    };
+
+    document.querySelectorAll('.pix').forEach(svg => {
+      const rows = SPRITES[svg.dataset.sprite];
+      svg.setAttribute('viewBox', `0 0 ${rows[0].length} ${rows.length}`);
+      rows.forEach((row, y) => [...row].forEach((c, x) => {
+        if (c !== '#') return;
+        const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        r.setAttribute('x', x);
+        r.setAttribute('y', y);
+        r.setAttribute('width', 1);
+        r.setAttribute('height', 1);
+        svg.appendChild(r);
+      }));
+    });
+
+    /* ---------- DATA ---------- */
+    const MOTIVATIONAL_QUOTES = [
+      "\"Beauty will save the world.\"\n— Dostoevsky",
+      "\"Taking a new step, uttering a new word, is what people fear most.\"\n— Dostoevsky",
+      "\"What you seek is seeking you.\"\n— Rumi",
+      "\"The wound is the place where the light enters you.\"\n— Rumi",
+      "\"Life without love is like a tree without blossoms or fruit.\"\n— Khalil Gibran",
+      "\"Love looks not with the eyes but with the mind.\"\n— Shakespeare",
+      "\"At the touch of love everyone becomes a poet.\"\n— Plato"
+    ];
+
+    const CONSTELLATION_PHRASES = [
+      "You Make My Ordinary Days Feel Special",
+      "I Am So Glad You Exist In My Universe",
+      "Always Smiling When I Think Of You",
+      "A Little Universe Made Just For You"
+    ];
+
+    const finalMessages = [
+      "GAME SAVED. ♡\n\nNo matter the distance,\nyou're my favorite notification.",
+      "GAME SAVED. ♡\n\nThank you for being the\nbrightest star in my sky.",
+      "GAME SAVED. ♡\n\n850 KMs is just a number.\nThe connection is real.",
+      "GAME SAVED. ♡\n\nI built this little universe\njust to see you smile."
+    ];
+
+    const getRandom = arr => arr[Math.floor(Math.random() * arr.length)];
+
+    /* ---------- NAVIGATION ---------- */
+    function switchScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function attemptLogin() {
+      const pwd = document.getElementById('password').value.toLowerCase();
+      if (pwd === 'moss') {
+        switchScreen('menu-screen');
+      } else {
+        const hint = document.getElementById('neon-hint');
+        hint.classList.add('glow');
+        setTimeout(() => hint.classList.remove('glow'), 3000);
+        document.getElementById('password').value = '';
+      }
+    }
+
+    document.getElementById('password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') attemptLogin();
+    });
+
+    function selectMenu(choice) {
+      const hasPlayed = localStorage.getItem('moss_started');
+      const sysMsg = document.getElementById('sys-message');
+
+      if (choice === 'new') {
+        if (hasPlayed) {
+          sysMsg.innerHTML = "Excuse me?! 😭<br><br>You already have a perfectly good adventure going on. Choose Continue. ♡";
+        } else {
+          localStorage.setItem('moss_started', 'true');
+          launchDashboard();
+        }
+      } else if (!hasPlayed) {
+        sysMsg.innerHTML = "Wait... Continue what? 😭<br><br>You haven't even started yet, player! Click New Game.";
+      } else {
+        launchDashboard();
+      }
+    }
+
+    function launchDashboard() {
+      switchScreen('dashboard-screen');
+      document.getElementById('quote-widget').innerText = getRandom(MOTIVATIONAL_QUOTES);
+      initConstellation();
+    }
+
+    function resetGame() {
+      launchDashboard();
+    }
+
+    /* ---------- CONSTELLATION PUZZLE ---------- */
+    let currentWords = [];
+    let starElements = [];
+    let connectedIndex = -1;
+    let isDragging = false;
+    let tempLine = null;
+
+    function initConstellation() {
+      const phrase = getRandom(CONSTELLATION_PHRASES);
+      currentWords = phrase.split(' ');
+      connectedIndex = -1;
+      starElements = [];
+      isDragging = false;
+      tempLine = null;
+
+      const area = document.getElementById('constellation-area');
+      area.innerHTML = '';
+      document.getElementById('lines').innerHTML = '';
+
+      currentWords.forEach((word, index) => {
+        const el = document.createElement('div');
+        el.className = 'star-node';
+        el.style.left = (Math.floor(Math.random() * 70) + 15) + '%';
+        el.style.top = (Math.floor(Math.random() * 70) + 15) + '%';
+        el.dataset.index = index;
+        el.innerHTML = `<div class="star-word">${word}</div><div class="star-dot"></div>`;
+
+        el.addEventListener('mousedown', e => startDrag(e, index));
+        el.addEventListener('mouseenter', () => enterStar(index));
+        el.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e.touches[0], index); }, { passive: false });
+
+        area.appendChild(el);
+        starElements.push(el);
+      });
+    }
+
+    (function setupPuzzleListeners() {
+      const area = document.getElementById('constellation-area');
+      area.addEventListener('mousemove', moveDrag);
+      area.addEventListener('mouseup', endDrag);
+      area.addEventListener('mouseleave', endDrag);
+      area.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const t = e.touches[0];
+        moveDrag(t);
+        const node = document.elementFromPoint(t.clientX, t.clientY)?.closest('.star-node');
+        if (node) enterStar(parseInt(node.dataset.index));
+      }, { passive: false });
+      area.addEventListener('touchend', endDrag);
+    })();
+
+    function startDrag(e, index) {
+      const canStart = index === connectedIndex + 1 || (index === connectedIndex && connectedIndex >= 0);
+      if (!canStart) return;
+
+      isDragging = true;
+      if (index === connectedIndex + 1) {
+        activateStar(index);
+        connectedIndex = index;
+      }
+
+      tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      tempLine.classList.add('aurora-line');
+      const pt = getCenterOffset(starElements[connectedIndex]);
+      tempLine.setAttribute('x1', pt.x);
+      tempLine.setAttribute('y1', pt.y);
+      tempLine.setAttribute('x2', pt.x);
+      tempLine.setAttribute('y2', pt.y);
+      document.getElementById('lines').appendChild(tempLine);
+    }
+
+    function moveDrag(e) {
+      if (!isDragging || !tempLine) return;
+      const box = document.getElementById('puzzle-container').getBoundingClientRect();
+      tempLine.setAttribute('x2', e.clientX - box.left);
+      tempLine.setAttribute('y2', e.clientY - box.top);
+    }
+
+    function enterStar(index) {
+      if (!isDragging || !tempLine || index !== connectedIndex + 1) return;
+
+      activateStar(index);
+      const pt = getCenterOffset(starElements[index]);
+      tempLine.setAttribute('x2', pt.x);
+      tempLine.setAttribute('y2', pt.y);
+      tempLine = null;
+      connectedIndex = index;
+
+      if (connectedIndex === currentWords.length - 1) {
+        isDragging = false;
+        setTimeout(showFinal, 1500);
+      } else {
+        startDrag(null, index);
+      }
+    }
+
+    function endDrag() {
+      isDragging = false;
+      if (tempLine) {
+        tempLine.remove();
+        tempLine = null;
+      }
+    }
+
+    function activateStar(index) { starElements[index].classList.add('active'); }
+
+    function getCenterOffset(el) {
+      const r = el.getBoundingClientRect();
+      const p = document.getElementById('puzzle-container').getBoundingClientRect();
+      return { x: r.left - p.left + r.width / 2, y: r.top - p.top + r.height / 2 };
+    }
+
+    function showFinal() {
+      document.getElementById('final-message').innerText = getRandom(finalMessages);
+      switchScreen('final-screen');
+    }
+
+    /* ---------- YOUTUBE JUKEBOX ---------- */
+    const VIDEO_IDS = [
+      '9cHq63r1vHQ', 'DdI598gKkKw', 'jQJuaEz8j_8', 'So2_AxSXak4', 'io9O4vpx4f4',
+      'LV27I-Wj0No', 'ZUzZvaMYL60', 'BSMGMUH3Mo8', 'JZnwa4HBysg', 'sQtnhwU2R9Y',
+      'Ee3nf88XGjg', 'aiTXImcbhoY', 'GmySJBMyboU', '7uRDKbtDlXg', '3KnWkfPQz3Q',
+      'qH1eRWlJpsY', 'UF9kvy51_F0', '9ZPY9ZopT0k', 'qI4rijn4_Mo', '9DQAoDMJsS4',
+      'T6jFshH6XmY', 'SxkHNou0uiM', 'jDG4SBtFbtM', '3-XJCdc-80E', 'kxLkADIIFqg',
+      'oGDLskZJy0c', '8VKD-IlvibI', 'lr2TpW3wW0g', 'mnxPiV0g4ZE', '-8U-8-XIxXc', '9dKFNhzIbM8'
+    ];
+
+    let ytPlayer;
+    let ytReady = false;
+    let isPlaying = false;
+    let lastId = null;
+    let errorStreak = 0;
+
+    function onYouTubeIframeAPIReady() {
+      if (window.location.protocol === 'file:') {
+        console.warn("YouTube songs require a web server to play (Live Server or GitHub Pages).");
+      }
+
+      const playerVars = { controls: 0, playsinline: 1, disablekb: 1 };
+      if (window.location.protocol.startsWith('http')) {
+        playerVars.origin = window.location.origin;
+      }
+
+      ytPlayer = new YT.Player('ytPlayer', {
+        height: '200',
+        width: '200',
+        playerVars,
+        events: {
+          onReady: () => { ytReady = true; ytPlayer.setVolume(50); },
+          onStateChange: e => {
+            if (e.data === YT.PlayerState.PLAYING) { errorStreak = 0; setDJState(true); }
+            if (e.data === YT.PlayerState.PAUSED) setDJState(false);
+            if (e.data === YT.PlayerState.ENDED) playRandom();
+          },
+          onError: e => {
+            console.log('YT ERROR:', e.data);
+            errorStreak++;
+            if (e.data === 153 || errorStreak >= 5) {
+              setStatus(`USE LIVE SERVER`, 'var(--neon-red)');
+              return;
+            }
+            playRandom();
+          }
+        }
+      });
+    }
+
+    function playRandom() {
+      let id;
+      do { id = getRandom(VIDEO_IDS); } while (VIDEO_IDS.length > 1 && id === lastId);
+      lastId = id;
+      ytPlayer.loadVideoById(id);
+    }
+
+    function toggleDJ() {
+      if (!ytReady) { setStatus('LOADING...', '#666'); return; }
+      errorStreak = 0;
+      if (isPlaying) ytPlayer.pauseVideo();
+      else if (lastId) ytPlayer.playVideo();
+      else playRandom();
+    }
+
+    function setStatus(text, color) {
+      const s = document.getElementById('dj-status');
+      s.innerText = text;
+      s.style.color = color;
+    }
+
+    function setDJState(playing) {
+      isPlaying = playing;
+      document.getElementById('vinyl').classList.toggle('playing', playing);
+      document.getElementById('equalizer').classList.toggle('playing', playing);
+
+      const btn = document.getElementById('dj-btn');
+      const color = playing ? 'var(--neon-green)' : 'var(--neon-pink)';
+      btn.innerText = playing ? '[ PAUSE ]' : '[ PLAY RANDOM ]';
+      btn.style.color = color;
+      btn.style.borderColor = color;
+      setStatus(playing ? 'PLAYING...' : 'PAUSED', playing ? 'var(--neon-green)' : '#666');
+    }
+  </script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
